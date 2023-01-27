@@ -1,40 +1,28 @@
 const express = require('express');
 const { graphqlHTTP } = require('express-graphql');
 const { buildSchema } = require('graphql');
-const mysql = require('mysql2');
-
-// Create a connection to the MySQL database
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'quizgrad'
-});
+const schema=require('./schema/schema')
+const connection=require('./DB/conn')
 
 
-const schema = buildSchema(`
-  type Query {
-    users: [User]
-  
-    
-  }
-  type User {
-    id: Int
-    email:String
-    password:String
-  }
-  type Mutation {
-    addUser(email: String!, password: String!): User
-    updateUser(id: ID!, email: String, password: String): User
-    delete(id: Int!): Boolean
-  }
-`);
 
+const createTable = `CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL
+)`;
+connection.query(createTable, function (err, result) {
+  if (err){
+    console.log("Table already created.");
+  }else{
+  console.log("Table created");
+  };
+}); 
 // Define the root value for the API
 const rootValue = {
   users: () => {
     return new Promise((resolve, reject) => {
-      connection.query('SELECT * FROM signup', (err, results) => {
+      connection.query('SELECT * FROM users', (err, results) => {
         if (err) {
           reject(err);
         } else {
@@ -43,31 +31,31 @@ const rootValue = {
       });
     });
   },
-  addUser: ({ email, password }) => {
+  addUser: ({ email, name }) => {
     return new Promise((resolve, reject) => {
       connection.query(
-        'INSERT INTO signup (email, password) VALUES (?, ?)',
-        [email, password],
+        'INSERT INTO users (email, name) VALUES (?, ?)',
+        [email, name],
         (error, results) => {
           if (error) {
             reject(error);
           } else {
-            resolve({ id: results.insertId, email, password });
+            resolve({ id: results.insertId, email, name });
           }
         }
       );
     });
   },
-  updateUser:({id,email,password})=>{
+  updateUser:({id,email,name})=>{
     return new Promise ((resolve,reject)=>{
-      connection.query('UPDATE signup SET email = ?, password = ? WHERE id = ?',
-      [email, password, id],
+      connection.query('UPDATE users SET email = ?, name = ? WHERE id = ?',
+      [email, name, id],
       (error,results)=>{
         if(error){
           reject(error);
         }
         else{
-          resolve({id:results.insertId,email,password});
+          resolve({id:results.insertId,email,name});
         }
       })
     })
@@ -76,7 +64,7 @@ const rootValue = {
 
   delete:({id})=>{
     return new Promise ((resolve,reject)=>{
-      connection.query('DELETE FROM signup WHERE id=?',
+      connection.query('DELETE FROM users WHERE id=?',
       [id],
       (error,results)=>{
         if(error){
