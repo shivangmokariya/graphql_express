@@ -11,14 +11,17 @@ const createTable = `CREATE TABLE users (
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) NOT NULL
 )`;
+
 connection.query(createTable, function (err, result) {
   if (err){
     console.log("Table already created.");
   }else{
   console.log("Table created");
   };
-}); 
+});
+
 // Define the root value for the API
+
 const rootValue = {
   users: () => {
     return new Promise((resolve, reject) => {
